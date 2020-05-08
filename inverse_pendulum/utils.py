@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import PIL
 from IPython.display import clear_output
+import timeit
 
 
 class QLearning:
@@ -52,6 +53,8 @@ class QLearning:
 
         self.episodic_cumm_reward = []
 
+        self.elapsed_time = None
+
     def get_s_idx(self, st):
         st_ = [self.step_state * (np.round(s / self.step_state)) for s in st]
         return self.state_reverse_map[str(np.around(st_, self.decimal_state) + 0.)]
@@ -94,6 +97,7 @@ class QLearning:
         return avg, std
 
     def train(self):
+        start = timeit.timeit()
         for episode in range(self.episodes):
             s = self.env.reset()
             s_idx = self.get_s_idx(s)
@@ -118,7 +122,9 @@ class QLearning:
                         self.epsilon *= self.decayment_rate
 
             self.episodic_cumm_reward.append(cumm_reward)
-            self.plot_steps()
+
+        end = timeit.timeit()
+        self.elapsed_time = end - start
 
     def test(self, n_steps):
         s = self.env.reset()
@@ -188,6 +194,8 @@ class LowRankLearning:
 
         self.episodic_cumm_reward = []
 
+        self.elapsed_time = None
+
     def get_s_idx(self, st):
         st_ = [self.step_state * (np.round(s / self.step_state)) for s in st]
         return self.state_reverse_map[str(np.around(st_, self.decimal_state) + 0.)]
@@ -230,6 +238,7 @@ class LowRankLearning:
         return avg, std
 
     def train(self):
+        start = timeit.timeit()
         for episode in range(self.episodes):
 
             s = self.env.reset()
@@ -264,7 +273,9 @@ class LowRankLearning:
                         self.epsilon *= self.decayment_rate
 
             self.episodic_cumm_reward.append(cumm_reward)
-            self.plot_steps()
+
+        end = timeit.timeit()
+        self.elapsed_time = end - start
 
     def test(self, n_steps):
         s = self.env.reset()
