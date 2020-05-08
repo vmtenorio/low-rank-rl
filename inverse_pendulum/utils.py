@@ -1,6 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import PIL
+from IPython.display import clear_output
 
-class q_learning:
+
+class QLearning:
     def __init__(self,
                  env,
                  state_map,
@@ -103,14 +107,13 @@ class q_learning:
                 s_prime_idx = self.get_s_idx(s_prime)
                 cumm_reward += r
 
-                target_Q = r + self.gamma * np.max(self.Q[s_prime_idx, :])
-                error_signal = target_Q - self.Q[s_idx, a_idx]
+                target_q = r + self.gamma * np.max(self.Q[s_prime_idx, :])
+                error_signal = target_q - self.Q[s_idx, a_idx]
                 self.Q[s_idx, a_idx] += self.alpha * error_signal
 
-                s = s_prime
                 s_idx = s_prime_idx
 
-                if (self.decaying_epsilon) & (episode > self.exploration_limit):
+                if self.decaying_epsilon & (episode > self.exploration_limit):
                     if self.epsilon > self.epsilon_lower_bound:
                         self.epsilon *= self.decayment_rate
 
@@ -119,7 +122,6 @@ class q_learning:
 
     def test(self, n_steps):
         s = self.env.reset()
-        img = plt.imshow(self.env.render(mode='rgb_array'))
 
         for i in range(n_steps):
             s_idx = self.get_s_idx(s)
@@ -130,7 +132,8 @@ class q_learning:
             s = s_prime
         self.env.close()
 
-class low_rank_td_learning:
+
+class LowRankLearning:
     def __init__(self,
                  env,
                  state_map,
@@ -193,7 +196,7 @@ class low_rank_td_learning:
         at_ = [self.step_action * (np.round(a / self.step_action)) for a in at]
         return self.action_reverse_map[str(np.around(at_, self.decimal_action) + 0.)]
 
-    def choose_action(self, st_idx, q_current_state):
+    def choose_action(self, q_current_state):
         if np.random.rand() < self.epsilon:
             a = self.env.action_space.sample()
             return a, self.get_a_idx(a)
@@ -236,7 +239,7 @@ class low_rank_td_learning:
             cumm_reward = 0
 
             for step in range(self.max_steps):
-                a, a_idx = self.choose_action(s_idx, q_current_state)
+                a, a_idx = self.choose_action(q_current_state)
 
                 s_prime, r, done, _ = self.env.step(a)
                 s_prime_idx = self.get_s_idx(s_prime)
@@ -253,11 +256,10 @@ class low_rank_td_learning:
                 self.R[:, a_idx] -= self.alpha * (
                             -err * self.L[s_idx, :] + self.lambda_r * self.R[:, a_idx])
 
-                s = s_prime
                 s_idx = s_prime_idx
                 q_current_state = q_next_state
 
-                if (self.decaying_epsilon) & (episode > self.exploration_limit):
+                if self.decaying_epsilon & (episode > self.exploration_limit):
                     if self.epsilon > self.epsilon_lower_bound:
                         self.epsilon *= self.decayment_rate
 
@@ -266,7 +268,6 @@ class low_rank_td_learning:
 
     def test(self, n_steps):
         s = self.env.reset()
-        img = plt.imshow(self.env.render(mode='rgb_array'))
         Q_hat = self.L @ self.R
 
         for i in range(n_steps):
