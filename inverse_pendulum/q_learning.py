@@ -22,7 +22,7 @@ mapping = Mapper()
 env = gym.make(mapping.environment)
 
 state_map, state_reverse_map = mapping.get_state_map(STEP_STATE, DECIMAL_STATE)
-action_map, action_reverser_map = mapping.get_action_map(STEP_ACTION, DECIMAL_ACTION)
+action_map, action_reverse_map = mapping.get_action_map(STEP_ACTION, DECIMAL_ACTION)
 
 n_states = len(state_map)
 n_actions = len(action_map)
@@ -31,7 +31,7 @@ q_learner = QLearning(env=env,
                       state_map=state_map,
                       action_map=action_map,
                       state_reverse_map=state_reverse_map,
-                      action_reverser_map=action_reverser_map,
+                      action_reverse_map=action_reverse_map,
                       n_states=n_states,
                       n_actions=n_actions,
                       decimal_state=DECIMAL_STATE,
@@ -46,6 +46,8 @@ q_learner = QLearning(env=env,
                       exploration_limit=EXPLORATION_LIMIT,
                       alpha=ALPHA,
                       gamma=GAMMA)
+
+q_learner.train()
 
 saver = Saver()
 saver.save_to_pickle(RESULTS_PATH + NAME_FILE + ".pickle", q_learner)

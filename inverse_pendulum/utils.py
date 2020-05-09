@@ -124,6 +124,7 @@ class QLearning:
                         self.epsilon *= self.decayment_rate
 
             self.episodic_cumm_reward.append(cumm_reward)
+            print("EPISODE: ", episode, " - Cumm. reward: ", cumm_reward)
 
         end = timeit.timeit()
         self.elapsed_time = end - start
@@ -275,6 +276,7 @@ class LowRankLearning:
                         self.epsilon *= self.decayment_rate
 
             self.episodic_cumm_reward.append(cumm_reward)
+            print("EPISODE: ", episode, " - Cumm. reward: ", cumm_reward)
 
         end = timeit.timeit()
         self.elapsed_time = end - start
