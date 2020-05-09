@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import PIL
 from IPython.display import clear_output
 import timeit
+import itertools
+import pickle
 
 
 class QLearning:
@@ -290,3 +292,53 @@ class LowRankLearning:
             s = s_prime
 
         self.env.close()
+
+
+class Mapper:
+    def __init__(self):
+
+        self.environment = "Pendulum-v0"
+
+        self.min_cos_theta = -1.0
+        self.max_cos_theta = 1.0
+        self.min_sin_theta = -1.0
+        self.max_sin_theta = 1.0
+        self.min_theta_dot = -8.0
+        self.max_theta_dot = 8.0
+
+        self.min_joint_effort = -2.0
+        self.max_joint_effort = 2.0
+
+    def get_map(self, iterable):
+        mapping = [np.array(combination) for combination in itertools.product(*iterable)]
+        reverse_mapping = {str(mapping[i]):i for i in range(len(mapping))}
+
+        return mapping, reverse_mapping
+
+    def get_state_map(self, step, decimal):
+        cos_theta = np.around(np.arange(self.min_cos_theta, self.max_cos_theta +
+                                        step, step), decimal) + 0.
+        sin_theta = np.around(np.arange(self.min_sin_theta, self.max_sin_theta +
+                                        step, step), decimal) + 0.
+        theta_dot = np.around(np.arange(self.min_theta_dot, self.max_theta_dot +
+                                        step, step), decimal) + 0.
+
+        return self.get_map([cos_theta, sin_theta, theta_dot])
+
+    def get_action_map(self, step, decimal):
+        joint_effort = np.around(np.arange(self.min_joint_effort, self.max_joint_effort +
+                                           step, step), decimal) + 0.
+
+        return self.get_map([joint_effort])
+
+
+class Saver:
+    @staticmethod
+    def save_to_pickle(path, obj):
+        with open(path, 'wb') as f:
+            pickle.dump(obj, f)
+
+    @staticmethod
+    def load_from_pickle(path):
+        with open(path, 'rb') as f:
+            return pickle.load(f)
