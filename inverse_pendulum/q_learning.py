@@ -1,28 +1,20 @@
 import gym
+import json
 from utils import Mapper, QLearning, Saver
 
 
-STEP_STATE = .2
-DECIMAL_STATE = 1
-STEP_ACTION = .05
-DECIMAL_ACTION = 2
-EPISODES = 10000
-MAX_STEPS = 10000
-DECAY_RATE = .99999999
-EPSILON = 1.
-EPSILON_LOWER_BOUND = .0
-EXPLORATION_LIMIT = 0
-ALPHA = .9
-GAMMA = .9
-
-RESULTS_PATH = "results/"
-NAME_FILE = "q_learning_ss02_sa005"
+parameters_file = "experiments/exp_1.json"
+with open(parameters_file) as j:
+    parameters = json.loads(j.read())
 
 mapping = Mapper()
 env = gym.make(mapping.environment)
 
-state_map, state_reverse_map = mapping.get_state_map(STEP_STATE, DECIMAL_STATE)
-action_map, action_reverse_map = mapping.get_action_map(STEP_ACTION, DECIMAL_ACTION)
+state_map, state_reverse_map = mapping.get_state_map(parameters["step_state"],
+                                                     parameters["decimal_state"])
+
+action_map, action_reverse_map = mapping.get_action_map(parameters["step_action"],
+                                                        parameters["decimal_action"])
 
 n_states = len(state_map)
 n_actions = len(action_map)
@@ -34,20 +26,20 @@ q_learner = QLearning(env=env,
                       action_reverse_map=action_reverse_map,
                       n_states=n_states,
                       n_actions=n_actions,
-                      decimal_state=DECIMAL_STATE,
-                      decimal_action=DECIMAL_ACTION,
-                      step_state=STEP_STATE,
-                      step_action=STEP_ACTION,
-                      episodes=EPISODES,
-                      max_steps=MAX_STEPS,
-                      decayment_rate=DECAY_RATE,
-                      epsilon=EPSILON,
-                      epsilon_lower_bound=EPSILON_LOWER_BOUND,
-                      exploration_limit=EXPLORATION_LIMIT,
-                      alpha=ALPHA,
-                      gamma=GAMMA)
+                      decimal_state=parameters["decimal_state"],
+                      decimal_action=parameters["decimal_action"],
+                      step_state=parameters["step_state"],
+                      step_action=parameters["step_action"],
+                      episodes=parameters["episodes"],
+                      max_steps=parameters["max_steps"],
+                      decayment_rate=parameters["decay_rate"],
+                      epsilon=parameters["epsilon"],
+                      epsilon_lower_bound=parameters["epsilon_lower_bound"],
+                      exploration_limit=parameters["exploration_limit"],
+                      alpha=parameters["alpha"],
+                      gamma=parameters["gamma"])
 
 q_learner.train()
 
 saver = Saver()
-saver.save_to_pickle(RESULTS_PATH + NAME_FILE + ".pickle", q_learner)
+saver.save_to_pickle(parameters["results_path"] + parameters["name_file"] + ".pickle", q_learner)
