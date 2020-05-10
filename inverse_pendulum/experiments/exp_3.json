@@ -1,8 +1,8 @@
 {
   "step_state": 0.2,
   "decimal_state": 1,
-  "step_action": 0.05,
-  "decimal_action": 2,
+  "step_action": 0.1,
+  "decimal_action": 1,
   "episodes": 5000,
   "max_steps": 10000,
   "decay_rate": 0.9999999,
@@ -12,5 +12,5 @@
   "alpha": 0.9,
   "gamma": 0.9,
   "results_path": "results/",
-  "name_file": "q_learning_ss02_sa005"
+  "name_file": "q_learning_ss02_sa01"
 }

@@ -1,6 +1,6 @@
 {
-  "step_state": 0.2,
-  "decimal_state": 1,
+  "step_state": 0.25,
+  "decimal_state": 2,
   "step_action": 0.05,
   "decimal_action": 2,
   "episodes": 5000,
@@ -12,5 +12,5 @@
   "alpha": 0.9,
   "gamma": 0.9,
   "results_path": "results/",
-  "name_file": "q_learning_ss02_sa005"
+  "name_file": "q_learning_ss025_sa005"
 }
