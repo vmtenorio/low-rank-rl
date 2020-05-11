@@ -1,4 +1,4 @@
-from utils import Saver
+from utils import Saver, QLearning
 
-q_learner = Saver.load_from_pickle("results/q_learning_ss02_sa005.pickle")
-print(q_learner.epsilon)
+q_learner = Saver.load_from_pickle("results/q_learning_ss02_sa01.pickle")
+q_learner.test(1000)
