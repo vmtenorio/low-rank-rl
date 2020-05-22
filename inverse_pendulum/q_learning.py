@@ -3,7 +3,7 @@ import json
 from utils import Mapper, QLearning, Saver
 
 
-parameters_file = "experiments/exp_13.json"
+parameters_file = "experiments/exp_14.json"
 with open(parameters_file) as j:
     parameters = json.loads(j.read())
 
