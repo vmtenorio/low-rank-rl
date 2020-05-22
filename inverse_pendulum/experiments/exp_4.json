@@ -9,7 +9,7 @@
   "epsilon": 1.0,
   "epsilon_lower_bound": 0.0,
   "exploration_limit": 0.0,
-  "alpha": 0.9,
+  "alpha": 0.0005,
   "gamma": 0.9,
   "results_path": "results/",
   "name_file": "low_rank_k_10",

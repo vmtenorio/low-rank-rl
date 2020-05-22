@@ -28,7 +28,8 @@ class QLearning:
                  epsilon_lower_bound=0.0,
                  exploration_limit=1000,
                  alpha=.9,
-                 gamma=.9):
+                 gamma=.9,
+                 action_penalty=.001):
 
         self.env = env
         self.state_map = state_map
@@ -50,6 +51,7 @@ class QLearning:
         self.exploration_limit = exploration_limit
         self.alpha = alpha
         self.gamma = gamma
+        self.action_penalty = action_penalty
 
         self.Q = np.zeros((n_states, n_actions))
 
@@ -110,6 +112,7 @@ class QLearning:
                 a, a_idx = self.choose_action(s_idx)
 
                 s_prime, r, done, _ = self.env.step(a)
+                r = -(np.arccos(s[0])**2 + .1*s[2]**2 + self.action_penalty*a[0]**2)
                 s_prime_idx = self.get_s_idx(s_prime)
                 cumm_reward += r
 
@@ -117,6 +120,7 @@ class QLearning:
                 error_signal = target_q - self.Q[s_idx, a_idx]
                 self.Q[s_idx, a_idx] += self.alpha * error_signal
 
+                s = s_prime
                 s_idx = s_prime_idx
 
                 if self.decaying_epsilon & (episode > self.exploration_limit):
@@ -168,7 +172,8 @@ class LowRankLearning:
                  alpha=.9,
                  gamma=.9,
                  lambda_l=0.0,
-                 lambda_r=0.0):
+                 lambda_r=0.0,
+                 action_penalty=.001):
 
         self.env = env
         self.state_map = state_map
@@ -193,6 +198,7 @@ class LowRankLearning:
         self.gamma = gamma
         self.lambda_l = lambda_l
         self.lambda_r = lambda_r
+        self.action_penalty = action_penalty
 
         self.L = np.random.rand(n_states, k) / 1e5
         self.R = np.random.rand(k, n_actions) / 1e5
@@ -256,6 +262,7 @@ class LowRankLearning:
                 a, a_idx = self.choose_action(q_current_state)
 
                 s_prime, r, done, _ = self.env.step(a)
+                r = -(np.arccos(s[0])**2 + .1*s[2]**2 + self.action_penalty*a[0]**2)
                 s_prime_idx = self.get_s_idx(s_prime)
                 cumm_reward += r
 
@@ -270,6 +277,7 @@ class LowRankLearning:
                 self.R[:, a_idx] -= self.alpha * (
                             -err * self.L[s_idx, :] + self.lambda_r * self.R[:, a_idx])
 
+                s = s_prime
                 s_idx = s_prime_idx
                 q_current_state = q_next_state
 

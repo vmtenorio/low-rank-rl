@@ -3,7 +3,7 @@ import json
 from utils import Mapper, LowRankLearning, Saver
 
 
-parameters_file = "experiments/exp_4.json"
+parameters_file = "experiments/exp_8.json"
 with open(parameters_file) as j:
     parameters = json.loads(j.read())
 
@@ -38,7 +38,10 @@ low_rank_learner = LowRankLearning(env=env,
                                    exploration_limit=parameters["exploration_limit"],
                                    alpha=parameters["alpha"],
                                    gamma=parameters["gamma"],
-                                   k=parameters["k"])
+                                   k=parameters["k"],
+                                   lambda_l=parameters["lambda_l"],
+                                   lambda_r=parameters["lambda_r"],
+                                   action_penalty=parameters["action_penalty"])
 
 low_rank_learner.train()
 

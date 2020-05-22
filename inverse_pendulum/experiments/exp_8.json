@@ -1,0 +1,20 @@
+{
+  "step_state": 0.2,
+  "decimal_state": 1,
+  "step_action": 0.05,
+  "decimal_action": 2,
+  "episodes": 20000,
+  "max_steps": 10000,
+  "decay_rate": 0.9999999,
+  "epsilon": 1.0,
+  "epsilon_lower_bound": 0.0,
+  "exploration_limit": 0.0,
+  "alpha": 0.0005,
+  "gamma": 0.9,
+  "results_path": "results/",
+  "name_file": "low_rank_k_3_apenal_1",
+  "k": 3,
+  "lambda_l": 0.0,
+  "lambda_r": 0.0,
+  "action_penalty": 1
+}

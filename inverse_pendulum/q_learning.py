@@ -3,7 +3,7 @@ import json
 from utils import Mapper, QLearning, Saver
 
 
-parameters_file = "experiments/exp_1.json"
+parameters_file = "experiments/exp_13.json"
 with open(parameters_file) as j:
     parameters = json.loads(j.read())
 
@@ -37,7 +37,8 @@ q_learner = QLearning(env=env,
                       epsilon_lower_bound=parameters["epsilon_lower_bound"],
                       exploration_limit=parameters["exploration_limit"],
                       alpha=parameters["alpha"],
-                      gamma=parameters["gamma"])
+                      gamma=parameters["gamma"],
+                      action_penalty=parameters["action_penalty"])
 
 q_learner.train()
 
