@@ -3,7 +3,7 @@ import json
 from utils import Mapper, LowRankLearning, Saver
 
 
-parameters_file = "experiments/exp_15.json"
+parameters_file = "experiments/exp_16.json"
 with open(parameters_file) as j:
     parameters = json.loads(j.read())
 

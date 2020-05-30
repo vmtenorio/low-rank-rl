@@ -56,6 +56,8 @@ class QLearning:
         self.Q = np.zeros((n_states, n_actions))
 
         self.episodic_cumm_reward = []
+        self.greedy_rewards_mu = []
+        self.greedy_rewards_sigma = []
 
         self.elapsed_time = None
 
@@ -132,8 +134,13 @@ class QLearning:
                   " - Cumm. reward: ", cumm_reward,
                   " - Epsilon: ", np.around(self.epsilon, 2))
 
+            if (episode%1000) == 0:
+                self.test_average_reward(10000, 250)
+                print("Last greedy reward: ", self.greedy_rewards_mu[-1])
+
         end = timeit.timeit()
         self.elapsed_time = end - start
+        self.test_average_reward(10000, 250)
 
     def test(self, n_steps):
         s = self.env.reset()
@@ -146,6 +153,25 @@ class QLearning:
             PIL.Image.fromarray(self.env.render(mode='rgb_array')).resize((320, 420))
             s = s_prime
         self.env.close()
+
+    def test_average_reward(self, n_steps, n_episodes):
+        rewards = []
+
+        for i in range(n_episodes):
+            state = self.env.reset()
+            cum_reward = 0
+
+            for j in range(n_steps):
+                state_idx = self.get_s_idx(state)
+                action_idx = np.argmax(self.Q[state_idx, :])
+                action = self.action_map[action_idx]
+                new_state, reward, done, info = self.env.step(action)
+                reward = -(np.arccos(state[0])**2 + .1*state[2]**2 + self.action_penalty*action[0]**2)
+                state = new_state
+                cum_reward += reward
+            rewards.append(cum_reward)
+        self.greedy_rewards_mu.append(np.mean(rewards))
+        self.greedy_rewards_sigma.append(np.std(rewards))
 
 
 class LowRankLearning:
@@ -272,10 +298,8 @@ class LowRankLearning:
 
                 err = (q_bootstrapped - q_hat)
 
-                self.L[s_idx, :] -= self.alpha * (
-                            -err * self.R[:, a_idx] + self.lambda_l * self.L[s_idx, :])
-                self.R[:, a_idx] -= self.alpha * (
-                            -err * self.L[s_idx, :] + self.lambda_r * self.R[:, a_idx])
+                self.L[s_idx, :] -= self.alpha * (-err * self.R[:, a_idx] + self.lambda_l * self.L[s_idx, :])
+                self.R[:, a_idx] -= self.alpha * (-err * self.L[s_idx, :] + self.lambda_r * self.R[:, a_idx])
 
                 s = s_prime
                 s_idx = s_prime_idx
@@ -356,3 +380,67 @@ class Saver:
     def load_from_pickle(path):
         with open(path, 'rb') as f:
             return pickle.load(f)
+
+
+class TestUtils:
+
+    @staticmethod
+    def test_one_episode(Q, n_steps, learner):
+        states = []
+        actions = []
+        rewards = []
+
+        state = learner.env.reset()
+        while (np.abs((np.arccos(state[0]) - np.pi)) > 0.01):
+            state = learner.env.reset()
+
+        for i in range(n_steps):
+            state_idx = learner.get_s_idx(state)
+            action_idx = np.argmax(Q[state_idx, :])
+            action = learner.action_map[action_idx]
+            new_state, reward, done, info = learner.env.step(action)
+            reward = -(np.arccos(state[0])**2 + .1*state[2]**2 + learner.action_penalty*action[0]**2)
+
+            states.append(np.arccos(state[0]))
+            actions.append(action[0])
+            rewards.append(reward)
+
+            state = new_state
+
+        learner.env.close()
+
+        states = np.array(states)
+        actions = np.array(actions)
+        rewards = np.array(rewards)
+
+        return states, actions, rewards
+
+    @staticmethod
+    def test_average_reward(Q, n_steps, n_episodes, learner):
+        rewards = []
+
+        for i in range(n_episodes):
+            state = learner.env.reset()
+            cum_reward = 0
+
+            for j in range(n_steps):
+                state_idx = learner.get_s_idx(state)
+                action_idx = np.argmax(Q[state_idx, :])
+                action = learner.action_map[action_idx]
+                new_state, reward, done, info = learner.env.step(action)
+                reward = -(np.arccos(state[0])**2 + .1*state[2]**2 + learner.action_penalty*action[0]**2)
+                state = new_state
+                cum_reward += reward
+            rewards.append(cum_reward)
+        return np.mean(rewards), np.std(rewards)
+
+    @staticmethod
+    def plot_log_singular_values(s):
+        s = np.log(s)
+        s[s < 0] = 0
+
+        plt.figure(figsize=[14, 4])
+        plt.title("Singular values")
+        plt.bar(x=np.arange(len(s)), height=np.log(s))
+        plt.show()
+
