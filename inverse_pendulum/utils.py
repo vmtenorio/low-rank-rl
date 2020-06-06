@@ -317,14 +317,17 @@ class LowRankLearning:
         end = timeit.timeit()
         self.elapsed_time = end - start
 
-    def test(self, n_steps):
+    def test(self, n_steps, noise):
         s = self.env.reset()
         Q_hat = self.L @ self.R
 
         for i in range(n_steps):
             s_idx = self.get_s_idx(s)
-            a_idx = np.argmax(Q_hat[s_idx, :])
-            a = self.action_map[a_idx]
+            if np.random.rand() < noise:
+                a = self.env.action_space.sample()
+            else:
+                a_idx = np.argmax(Q_hat[s_idx, :])
+                a = self.action_map[a_idx]
             s_prime, r, done, info = self.env.step(a)
             PIL.Image.fromarray(self.env.render(mode='rgb_array')).resize((320, 420))
             s = s_prime
@@ -391,7 +394,7 @@ class TestUtils:
         rewards = []
 
         state = learner.env.reset()
-        while (np.abs((np.arccos(state[0]) - np.pi)) > 0.01):
+        while (np.abs((np.arccos(state[0]) - 0)) > 0.01) | (np.abs(state[2]) > 0.01):
             state = learner.env.reset()
 
         for i in range(n_steps):

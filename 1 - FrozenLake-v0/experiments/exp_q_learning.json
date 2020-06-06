@@ -1,0 +1,8 @@
+{
+  "episodes": 10000,
+  "max_steps": 100,
+  "epsilons": [0.1, 0.2, 0.3, 0.4],
+  "alpha": 0.9,
+  "gamma": 0.9,
+  "n_simulations": 100
+}
