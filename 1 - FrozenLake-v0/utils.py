@@ -15,7 +15,7 @@ class QLearning:
                  alpha=.9,
                  gamma=.9):
         """
-        :param env: gym.envs:
+        :param env: gym.envs
             OpenAI Gym environment.
         :param episodes: int
             Number of episodes.
