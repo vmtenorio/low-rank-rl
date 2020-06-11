@@ -428,6 +428,260 @@ class LowRankLearning:
         self.env.close()
 
 
+class LinearLearning:
+    def __init__(self,
+                 env,
+                 state_set,
+                 state_map,
+                 state_reverse_map,
+                 action_map,
+                 action_reverse_map,
+                 decimal_state,
+                 decimal_action,
+                 step_action,
+                 step_state,
+                 episodes=100000,
+                 max_steps=100,
+                 epsilon=.9,
+                 alpha=.9,
+                 gamma=.9):
+        """
+        :param env: gym.envs
+            OpenAI Gym environment.
+        :param state_set: list
+            Fixed point states to calculate features.
+        :param state_map: dict
+            Dictionary with the index of the state as key and the codified state as value.
+        :param action_map: dict
+            Dictionary with the index of the action as key and the codified action as value.
+        :param state_reverse_map: dict
+            Dictionary with codified state as key and the corresponding index as value.
+        :param action_reverse_map: dict
+            Dictionary with codified action as key and the corresponding index as value.
+        :param decimal_state: float
+            Precision of the state.
+        :param decimal_action: float
+            Precision of the action
+        :param step_state: float
+            Step of the state discretization.
+        :param step_action: float
+            Step of the action discretization.
+        :param episodes: int
+            Number of episodes.
+        :param max_steps: int
+            Maximum number of steps per episode.
+        :param epsilon: float
+            Probability of taking an exploratory action.
+        :param alpha: float
+            Learning rate.
+        :param gamma: float
+            Discount factor.
+        """
+
+        self.env = env
+        self.episodes = episodes
+        self.max_steps = max_steps
+        self.epsilon = epsilon
+        self.alpha = alpha
+        self.gamma = gamma
+        self.state_map = state_map
+        self.state_reverse_map = state_reverse_map
+        self.action_map = action_map
+        self.action_reverse_map = action_reverse_map
+        self.state_set = state_set
+        self.step_action = step_action
+        self.step_state = step_state
+        self.decimal_action = decimal_action
+        self.decimal_state = decimal_state
+
+        self.size = len(self.state_set) * len(self.action_set) + len(self.action_map)
+        self.w = np.random.rand(self.size, 1)
+
+        self.cumulative_reward = []
+        self.steps = []
+        self.greedy_r = []
+        self.greedy_steps = []
+
+        self.features = []
+        self.features_map = {}
+        for i, state in enumerate(self.state_map):
+            for j, action in enumerate(self.action_map):
+                self.features.append(self.get_features(state, j))
+                self.features_map[str(i) + str(j)] = i * len(self.action_map) + j
+        self.features = np.array(self.features)
+
+        self.n_states = len(self.state_map)
+        self.n_actions = len(self.action_map)
+
+    def choose_action(self, a_idx):
+        """
+        :param st_idx: int
+            Row index of the current state.
+        :return tuple
+            Selected action and index of the selected action.
+        """
+
+        if np.random.rand() < self.epsilon:
+            a = self.env.action_space.sample()
+            return a, self.get_a_idx(a)
+        return self.action_map[a_idx], a_idx
+
+    def get_features(self, s, a):
+        """
+        :param s: np.array
+            Current state.
+        :param a: int
+            Index of the current action
+        :return: np.array
+            Features of the state-action pair
+        """
+
+        position = a * (len(self.state_set) + 1)
+        encoded_state = np.zeros(self.size)
+
+        s_ = np.array([1] + list([np.exp(-np.sum((s - mu) ** 2) / 2) for mu in self.state_set])).reshape(1, -1)
+
+        encoded_state[position:position + s_.shape[1]] = s_
+        return encoded_state
+
+    def get_s_idx(self, st):
+        """
+        :param st: np.array
+            State to obtain the row index.
+        :return: int
+            Index of the state.
+        """
+
+        st_ = np.array([np.arctan(st[1] / st[0]), st[2]])
+        st_ = [self.step_state * (np.round(s / self.step_state)) for s in st_]
+        return self.state_reverse_map[str(np.around(st_, self.decimal_state) + 0.)]
+
+    def get_a_idx(self, at):
+        """
+        param at: np.array
+            Action to obtain the index of the action.
+        :return: int
+            Index of the action.
+        """
+
+        at_ = [self.step_action * (np.round(a / self.step_action)) for a in at]
+        return self.action_reverse_map[str(np.around(at_, self.decimal_action) + 0.)]
+
+    def train(self):
+
+        for episode in range(self.episodes):
+            s = self.env.reset(upright=True)
+            s_idx = self.get_s_idx(s)
+
+            idx = s_idx * self.n_actions
+            features_set = self.features[idx:idx + self.n_actions, :]
+            a_idx = np.argmax((features_set @ self.w).flatten())
+
+            cumm_reward = 0
+
+            for step in range(self.max_steps):
+                a, a_idx = self.choose_action(a_idx)
+                s_prime, r, done, info = self.env.step(a)
+                s_prime_idx = self.get_s_idx(s_prime)
+
+                theta = np.arctan(s_prime[1] / s_prime[0])
+                done = True if ((theta > np.pi / 4) | (theta < -np.pi / 4)) else False
+                r = .1 - (np.arccos(s[0]) ** 2 + s[2] ** 2 + a[0] ** 2)
+
+                idx = s_prime_idx * self.n_actions
+                features_set = self.features[idx:idx + self.n_actions, :]
+                a_prime_idx = np.argmax((features_set @ self.w).flatten())
+
+                features = self.features[s_idx * self.n_actions + a_idx, :]
+                features_prime = self.features[s_prime_idx * self.n_actions + a_prime_idx, :]
+
+                q_bootstrapped = r + self.gamma * features_prime @ self.w
+                q_hat = features @ self.w
+                err = (q_bootstrapped - q_hat)[0]
+
+                self.w -= self.alpha * (-err * features.reshape(-1, 1))
+
+                cumm_reward += r
+
+                s = s_prime
+                s_idx = s_prime_idx
+                a_idx = a_prime_idx
+
+                if done:
+                    break
+
+            if (episode % 100) == 0:
+                greedy_r, greedy_steps = self.run_greedy(self.max_steps)
+                self.greedy_r.append(greedy_r)
+                self.greedy_steps.append(greedy_steps)
+
+            self.cumulative_reward.append(cumm_reward)
+            self.steps.append(step)
+
+    def run_greedy(self, n_steps):
+        """
+        :param n_steps: int
+            Number of steps of the greedy episode.
+        :return: tuple
+            Cumulative reward of the episode and number of steps.
+        """
+
+        s = self.env.reset(upright=True)
+        s_idx = self.get_s_idx(s)
+
+        cum_r = 0
+
+        for i in range(n_steps):
+            idx = s_idx * self.n_actions
+            features_set = self.features[idx:idx + self.n_actions, :]
+            a_idx = np.argmax((features_set @ self.w).flatten())
+
+            a = self.action_map[a_idx]
+            s_prime, r, done, info = self.env.step(a)
+            s_prime_idx = self.get_s_idx(s_prime)
+
+            theta = np.arctan(s_prime[1] / s_prime[0])
+            done = (theta > 1.0) | (theta < -1.0)
+            cum_r += .1 - (np.arccos(s[0]) ** 2 + s[2] ** 2 + a[0] ** 2)
+
+            s = s_prime
+            s_idx = s_prime_idx
+
+            if done:
+                break
+
+        return cum_r, i
+
+    def test(self, steps):
+        """
+        :param n_steps: int
+            Number of steps of the test episode.
+        """
+
+        s = self.env.reset(upright=True)
+        s_idx = self.get_s_idx(s)
+        plt.imshow(self.env.render(mode='rgb_array'))
+
+        for i in range(steps):
+            idx = s_idx * self.n_actions
+            features_set = self.features[idx:idx + self.n_actions, :]
+            a_idx = np.argmax((features_set @ self.w).flatten())
+            a = self.action_map[a_idx]
+
+            s_prime, r, done, info = self.env.step(a)
+            s_prime_idx = self.get_s_idx(s_prime)
+            PIL.Image.fromarray(self.env.render(mode='rgb_array')).resize((320, 420))
+
+            theta = np.arctan(s_prime[1] / s_prime[0])
+            done = (theta > 1.0) | (theta < -1.0)
+
+            if done:
+                break
+
+            s_idx = s_prime_idx
+        self.env.close()
+
+
 class Mapper:
     def __init__(self):
 
