@@ -2,6 +2,12 @@ import numpy as np
 from matplotlib import rcParams
 from utils import Saver, TestUtils
 
+from matplotlib import rcParams
+
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Tahoma']
+rcParams['font.size'] = 16
+
 
 saver = Saver()
 test_utils = TestUtils()

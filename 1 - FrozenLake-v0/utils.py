@@ -4,6 +4,12 @@ import pickle
 import gym
 from gym.envs.registration import register
 
+from matplotlib import rcParams
+
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Tahoma']
+rcParams['font.size'] = 16
+
 
 class QLearning:
 
@@ -281,14 +287,14 @@ class TestUtils:
         return avg, std
 
     @staticmethod
-    def plot_smoothed_steps(epsilons, medians, stds, colors):
+    def plot_smoothed_steps(epsilons, medians_q, medians_lr, colors):
         """
         :param epsilons: list
             List of exploration probabilities.
-        :param medians: np.array
-            Array with the medians of the experiment.
-        :param stds: np.array
-            Array with the standard deviations of the experiment.
+        :param medians_q: np.array
+            Array with the medians of the Q-learning experiment.
+        :param medians_lr: np.array
+            Array with the medians of the LR-learning experiment.
         :param colors: list
             List of colors to plot.
         """
@@ -296,25 +302,31 @@ class TestUtils:
         plt.figure(figsize=[6, 4])
         plt.grid()
         for i in range(len(epsilons)):
-            plt.plot(medians[str(epsilons[i])], c=colors[i], label="ϵ=" + str(epsilons[i]))
-            plt.fill_between(range(len(medians[str(epsilons[i])])),
-                             medians[str(epsilons[i])] - stds[str(epsilons[i])],
-                             medians[str(epsilons[i])] + stds[str(epsilons[i])],
-                             alpha=.1,
-                             color=colors[i])
+            label_q = "ϵ=" + str(epsilons[i]) + " Q-learning"
+            label_lr = "ϵ=" + str(epsilons[i]) + " LR-learning"
+            plt.plot(np.arange(0, len(medians_q[str(epsilons[i])]), 5),
+                     medians_q[str(epsilons[i])][1::5],
+                     c=colors[i],
+                     label=label_q,
+                     linestyle=(0, (5, 8)))
+            plt.plot(medians_lr[str(epsilons[i])],
+                     c=colors[i],
+                     label=label_lr)
         plt.legend(prop={"size": 12})
         plt.xlim([0, 10000])
         plt.xlabel("Episodes")
-        plt.ylabel("Nº of steps")
+        plt.ylabel("(b) Nº of steps")
         plt.show()
 
     @staticmethod
-    def plot_sfe(epsilons, frobenius_errors, colors):
+    def plot_sfe(epsilons, frobenius_errors_q, frobenius_errors_lr, colors):
         """
         :param epsilons: list
             List of exploration probabilities.
-        :param frobenius_errors: np.array
-            Array with the Squared Frobenius Errors of the experiment.
+        :param frobenius_errors_q: np.array
+            Array with the Squared Frobenius Errors of the Q-learning experiment.
+        :param frobenius_errors_lr: np.array
+            Array with the Squared Frobenius Errors of the Low Rank experiment.
         :param colors: list
             List of colors to plot.
         """
@@ -322,11 +334,14 @@ class TestUtils:
         plt.figure(figsize=[6, 4])
         plt.grid()
         for i in range(len(epsilons)):
-            plt.plot(frobenius_errors[str(epsilons[i])], c=colors[i], label="ϵ=" + str(epsilons[i]))
+            label_q = "ϵ=" + str(epsilons[i]) + " Q-learning"
+            label_lr = "ϵ=" + str(epsilons[i]) + " LR-learning"
+            plt.plot(frobenius_errors_q[str(epsilons[i])], c=colors[i], label=label_q, linestyle='dashed')
+            plt.plot(frobenius_errors_lr[str(epsilons[i])], c=colors[i], label=label_lr)
         plt.legend(prop={"size": 12})
         plt.xlim([0, 10000])
         plt.xlabel("Episodes")
-        plt.ylabel("SFE")
+        plt.ylabel("(c) SFE")
         plt.show()
 
 

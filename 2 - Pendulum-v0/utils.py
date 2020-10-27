@@ -797,7 +797,7 @@ class TestUtils:
         plt.xlim(0, 25000)
         plt.legend(legend, prop={"size": 12})
         plt.xlabel("Episodes")
-        plt.ylabel("Median nº of steps")
+        plt.ylabel("(d) Median nº of steps")
         plt.show()
 
     @staticmethod
@@ -850,7 +850,7 @@ class TestUtils:
         labels = list(cs.keys())
         handles = [plt.Rectangle((0, 0), 1, 1, color=cs[label], alpha=.6) for label in labels]
         plt.legend(handles, labels, prop={"size": 12})
-        plt.ylabel("Cost (negative reward)")
+        plt.ylabel("(e) Cost (negative reward)")
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.show()
 
